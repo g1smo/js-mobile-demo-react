@@ -1,13 +1,13 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import MusicList from './app/views/MusicList.js';
 
 export default class App extends React.Component {
   render() {
     return (
       <View style={styles.container}>
-        <Text>Open up App.js to start working on your app!</Text>
-        <Text>Changes you make will automatically reload.</Text>
-        <Text>Shake your phone to open the developer menu.</Text>
+        <Text style={styles.heading}>Music list</Text>
+        <MusicList></MusicList>
       </View>
     );
   }
@@ -19,5 +19,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
+    height: 200
   },
+  heading: {
+    marginTop: 30,
+    marginBottom: 10,
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: 'darkgray'
+  }
 });
