@@ -8,35 +8,28 @@ import { StyleSheet,
     } from 'react-native';
 import { Bars } from 'react-native-loader';
 
-class MusicListItem extends Component {
-}
-
 class MusicList extends Component {
     constructor(props) {
         super(props);
 
         this.state = {
             loading: false,
-            data: [
-                {id:1, artist: "test", title: 'WHAAAAAT'},
-                {id:2, artist: "test", title: 'WHAAAAT'},
-                {id:3, artist: "test", title: 'WHAAAT'},
-                {id:4, artist: "test", title: 'WHAAAT'},
-                {id:5, artist: "test", title: 'WHAAT'},
-                {id:6, artist: "test", title: 'WHT'},
-                {id:7, artist: "test", title: 'WHAAAAAAAAT'},
-                {id:8, artist: "test", title: 'WHAANNNNNAAAT'}
-            ],
-            error: null
+            data: [],
+            error: null,
+            page: 0,
+            limit: 30
         };
     }
 
     keyExtractor = (item, index) => item.id;
 
     loadMusic = () => {
-        const url = 'http://kreten.si:3333/music?_limit=30';
+        if (this.state.loading) return;
 
-        this.setState({ data: [], loading: true });
+        console.log("initial load!");
+
+        const url = 'http://kreten.si:3333/music?_limit=' + this.state.limit + '&_page=' + this.state.page;
+        this.setState({ data: [], loading: true, page: 0 });
 
         fetch(url)
             .then(res => res.json())
@@ -44,21 +37,39 @@ class MusicList extends Component {
                 this.setState({
                     data: res,
                     error: res.error,
+                });
+                this.setState({
                     loading: false
-                })
+                });
             })
             .catch(error => {
                 this.setState({ error, loading: false});
             })
     };
 
-    renderItem = ({item}) => (
-        <View>
-            <Image style={{width: 50, height: 50}} source={{uri: item.albumArt}} />
-            <Text>{item.artist}</Text>
-            <Text>{item.title}</Text>
-        </View>
-    );
+    loadMore = () => {
+        if (this.state.loading) return;
+
+        console.log("load more!");
+
+        this.setState({ loading: true, page: this.state.page + 1 });
+        const url = 'http://kreten.si:3333/music?_limit=' + this.state.limit + '&_page=' + this.state.page;
+
+        fetch(url)
+            .then(res => res.json())
+            .then(res => {
+                this.setState({
+                    data: this.state.data.concat(res),
+                    error: res.error,
+                });
+                this.setState({
+                    loading: false
+                });
+            })
+            .catch(error => {
+                this.setState({ error, loading: false});
+            })
+    };
 
     renderHeader = () => (
         <Button
@@ -67,29 +78,39 @@ class MusicList extends Component {
         />
     );
 
-    _renderFooter = () => (
-        <Bars size={10} color="darkgray" />
-    );
+    renderFooter = () => {
+        if (this.state.loading) {
+            return (
+                <View style={styles.loaderContainer}>
+                    <Bars size={10} />
+                </View>
+            );
+        } else {
+            return null;
+        }
+    };
 
-    renderFooter = () => (
-        <Text>I will cick you faget</Text>
+    renderItem = ({item}) => (
+        <View style={{ flexDirection: 'row', borderBottomColor: 'black' }}>
+            <Image style={styles.albumArt} source={{uri: item.albumArt}} />
+            <View style={{ paddingTop: 7 }}>
+                <Text style={{ fontWeight: 'bold' }}>{item.artist}</Text>
+                <Text style={{ fontSize: 18 }}>{item.title}</Text>
+            </View>
+        </View>
     );
 
     render() {
-        if (this.state.loading) {
-            return (
-                <Bars size={10} />
-            );
-        }
         return (
             <FlatList
                 style={styles.list}
                 data={this.state.data}
                 keyExtractor={this.keyExtractor}
                 renderItem={this.renderItem}
-                ListHeaderComponent={this.renderHeader}>
-                ListFooterComponent={this.renderFooter}>
-            </FlatList>
+                ListHeaderComponent={this.renderHeader}
+                ListFooterComponent={this.renderFooter}
+                onEndReached={this.loadMore}
+            />
         );
     }
 }
@@ -102,7 +123,18 @@ const styles = StyleSheet.create({
     },
     list: {
         backgroundColor: 'lightgray',
-        height: 200,
         width: '100%'
+    },
+    loaderContainer: {
+        width: '100%',
+        alignItems: 'center',
+        padding: 10
+    },
+    albumArt: {
+        width: 50,
+        height: 50,
+        margin: 5,
+        marginRight: 10,
+        borderRadius: 4
     }
 });
