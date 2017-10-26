@@ -8,6 +8,8 @@ import { StyleSheet,
     } from 'react-native';
 import { Bars } from 'react-native-loader';
 
+const MUSIC_URL = 'http://kreten.si:3333/music';
+
 class MusicList extends Component {
     constructor(props) {
         super(props);
@@ -16,7 +18,7 @@ class MusicList extends Component {
             loading: false,
             data: [],
             error: null,
-            page: 0,
+            page: 1,
             limit: 30
         };
     }
@@ -26,10 +28,8 @@ class MusicList extends Component {
     loadMusic = () => {
         if (this.state.loading) return;
 
-        console.log("initial load!");
-
-        const url = 'http://kreten.si:3333/music?_limit=' + this.state.limit + '&_page=' + this.state.page;
-        this.setState({ data: [], loading: true, page: 0 });
+        this.setState({ data: [], loading: true, page: 1 });
+        let url = MUSIC_URL + '?_limit=' + this.state.limit + '&_page=' + this.state.page;
 
         fetch(url)
             .then(res => res.json())
@@ -48,12 +48,12 @@ class MusicList extends Component {
     };
 
     loadMore = () => {
-        if (this.state.loading) return;
+        if (this.state.data.length === 0 || this.state.loading) return;
 
-        console.log("load more!");
+        let newPage = this.state.page + 1;
+        this.setState({ loading: true, page: newPage });
+        let url = MUSIC_URL + '?_limit=' + this.state.limit + '&_page=' + newPage;
 
-        this.setState({ loading: true, page: this.state.page + 1 });
-        const url = 'http://kreten.si:3333/music?_limit=' + this.state.limit + '&_page=' + this.state.page;
 
         fetch(url)
             .then(res => res.json())
@@ -85,9 +85,9 @@ class MusicList extends Component {
                     <Bars size={10} />
                 </View>
             );
-        } else {
-            return null;
         }
+
+        return null;
     };
 
     renderItem = ({item}) => (
@@ -110,6 +110,7 @@ class MusicList extends Component {
                 ListHeaderComponent={this.renderHeader}
                 ListFooterComponent={this.renderFooter}
                 onEndReached={this.loadMore}
+                onEndReachedThreshold={100}
             />
         );
     }
